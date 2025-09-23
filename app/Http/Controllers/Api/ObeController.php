@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dosen;
+use App\Models\Kelas;
+use App\Models\Mengajar;
+use App\Models\Kelas_mahasiswa;
 use App\Models\Mahasiswa;
 use App\Models\Matakuliah;
 use App\Models\ProgramStudi;
@@ -41,8 +44,7 @@ class ObeController extends Controller
                 'kode_program_studi as kode_prodi',
                 'nama_program_studi as nama_prodi',
                 'nama_jenjang as jenjang'
-            )
-            ->limit(10)->get();
+            )->get();
         return response()->json(
             array(
                 'status' => array(
@@ -93,6 +95,57 @@ class ObeController extends Controller
             END as jenis_matkul
         ")
             )->get();
+        return response()->json(
+            array(
+                'status' => array(
+                    'code' => 200,
+                    'description' => "OK",
+                    'pages_count' => 1
+                ),
+                'results' => $data
+            )
+        );
+    }
+    public function mengajar()
+    {
+        $data = Mengajar::join('dosen', 'dosen.kode_dosen', '=', 'mengajar.kode_dosen')
+                        ->join('kelas', 'kelas.kelas_id', '=', 'mengajar.kelas_id')
+                        ->join('matakuliah', 'matakuliah.id_matakuliah', '=', 'kelas.id_matakuliah')
+                        ->select(
+                            'mengajar.mengajar_id as kode_mengajar',
+                            'dosen.homebase as kode_prodi',
+                            'dosen.nik as nik',
+                            'matakuliah.kode_matakuliah as kode_makul',
+                            'kelas.kelas_id as kode_kelas',
+                            DB::raw("'-' as jenis_dosen"),
+                            'kelas.kode_tahun_akademik as tahun_akademik',
+                            'kelas.semester as semester'
+                        )                        
+                        ->limit(10)->get();
+        return response()->json(
+            array(
+                'status' => array(
+                    'code' => 200,
+                    'description' => "OK",
+                    'pages_count' => 1
+                ),
+                'results' => $data
+            )
+        );
+    }
+    public function kelas_mahasiswa()
+    {
+        $data = Kelas_mahasiswa::join('kelas', 'kelas.kelas_id', '=', 'kelas_mahasiswa.kelas_id')
+                        ->join('krs_detail', 'krs_detail.kode_krs_detail', '=', 'kelas_mahasiswa.kode_krs_detail')
+                        ->join('krs', 'krs.kode_krs', '=', 'krs_detail.kode_krs')
+                        ->join('mahasiswa', 'mahasiswa.nim', '=', 'krs.nim')
+                        ->select(
+                            'mahasiswa.nim as npm',
+                            'nama_mahasiswa as nama',
+                            'email as email',
+                            'mahasiswa.program_studi_kode as kode_prodi',
+                        )                        
+                        ->limit(10)->get();
         return response()->json(
             array(
                 'status' => array(
