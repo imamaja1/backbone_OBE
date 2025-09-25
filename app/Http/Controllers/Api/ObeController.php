@@ -157,4 +157,30 @@ class ObeController extends Controller
             )
         );
     }
+    /**
+     * Menampilkan data mahasiswa berdasarkan tahun akademik (2 digit awal nim = 2 digit akhir tahun parameter)
+     * Contoh: tahun_akademik=2022, maka nim dimulai dengan '22'
+     */
+    public function MahasiswaByTahunAkademik($tahun_akademik)
+    {
+        // Ambil 2 digit terakhir dari tahun akademik
+        $tahun = substr($tahun_akademik, -2);
+        $mahasiswa = Mahasiswa::whereRaw('LEFT(nim, 2) = ?', [$tahun])
+            ->select(
+                'nim as npm',
+                'nama_mahasiswa as nama',
+                'email',
+                'program_studi_kode as kode_prodi'
+            )
+            ->get();
+
+        return response()->json([
+            'status' => [
+                'code' => 200,
+                'description' => 'OK',
+                'pages_count' => 1
+            ],
+            'results' => $mahasiswa
+        ]);
+    }
 }

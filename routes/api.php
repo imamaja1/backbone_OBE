@@ -39,6 +39,7 @@ Route::group(['prefix' => 'v1'], function () {
 
         Route::get('kurikulum/{id}', 'Api\KurikulumController@index');
         Route::get('obe-mahasiswa', 'Api\ObeController@Mahasiswa');
+        Route::get('obe-mahasiswa/{tahun_akademik}', 'Api\ObeController@MahasiswaByTahunAkademik');
         Route::get('obe-program-studi', 'Api\ObeController@Program_studi');
         Route::get('obe-dosen', 'Api\ObeController@Dosen');
         Route::get('obe-matakuliah', 'Api\ObeController@matakuliah');
