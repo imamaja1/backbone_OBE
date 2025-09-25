@@ -44,8 +44,9 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('obe-dosen', 'Api\ObeController@Dosen');
         Route::get('obe-matakuliah', 'Api\ObeController@matakuliah');
         Route::get('obe-mengajar', 'Api\ObeController@mengajar');
-        Route::get('obe-kelas-mahasiswa', 'Api\ObeController@kelas_mahasiswa');
-
+        // Route::get('obe-mengajar/{tahun_akademik}', 'Api\ObeController@mengajarByTahunAkademik');
+        Route::get('obe-kelas-mahasiswa/all', 'Api\ObeController@kelas_mahasiswa');
+        Route::get('obe-kelas-mahasiswa', 'Api\ObeController@kelas_mahasiswaByFilter');
 
         Route::get('dosen/dosen_prodi/{id}', 'Api\DosenController@dosen_prodi');
         Route::post('dosen/autocomplate', 'Api\DosenController@autocomplate');

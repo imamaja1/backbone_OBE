@@ -111,12 +111,23 @@ class ObeController extends Controller
         $data = Mengajar::join('dosen', 'dosen.kode_dosen', '=', 'mengajar.kode_dosen')
                         ->join('kelas', 'kelas.kelas_id', '=', 'mengajar.kelas_id')
                         ->join('matakuliah', 'matakuliah.id_matakuliah', '=', 'kelas.id_matakuliah')
+                        ->join('tahun_akademik', 'tahun_akademik.kode_tahun_akademik', '=', 'kelas.kode_tahun_akademik')
+                        ->join('nama_kelas', 'nama_kelas.nama_kelas_id', '=', 'kelas.nama_kelas_id')
                         ->select(
                             'mengajar.mengajar_id as kode_mengajar',
                             'dosen.homebase as kode_prodi',
                             'dosen.nik as nik',
                             'matakuliah.kode_matakuliah as kode_makul',
-                            'kelas.kelas_id as kode_kelas',
+                            DB::raw("CONCAT
+                                    (
+                                        SUBSTR(tahun_akademik.tahun_akademik, 3, 2),
+                                        nama_kelas.nama_kelas, 
+                                        kelas.kelas_id, '-',
+                                        matakuliah.kode_matakuliah,'-(',
+                                            matakuliah.nama_matakuliah, 
+                                        ')'
+                                ) 
+                                as kode_kelas"),
                             DB::raw("'-' as jenis_dosen"),
                             'kelas.kode_tahun_akademik as tahun_akademik',
                             'kelas.semester as semester'
@@ -157,13 +168,8 @@ class ObeController extends Controller
             )
         );
     }
-    /**
-     * Menampilkan data mahasiswa berdasarkan tahun akademik (2 digit awal nim = 2 digit akhir tahun parameter)
-     * Contoh: tahun_akademik=2022, maka nim dimulai dengan '22'
-     */
     public function MahasiswaByTahunAkademik($tahun_akademik)
     {
-        // Ambil 2 digit terakhir dari tahun akademik
         $tahun = substr($tahun_akademik, -2);
         $mahasiswa = Mahasiswa::whereRaw('LEFT(nim, 2) = ?', [$tahun])
             ->select(
@@ -181,6 +187,48 @@ class ObeController extends Controller
                 'pages_count' => 1
             ],
             'results' => $mahasiswa
+        ]);
+    }
+
+    public function kelas_mahasiswaByFilter(Request $request)
+    {
+        $tha = $request->query('tha');
+        $semester = $request->query('semester');
+        $kelas = $request->query('kelas');
+
+        $query = Kelas_mahasiswa::join('kelas', 'kelas.kelas_id', '=', 'kelas_mahasiswa.kelas_id')
+            ->join('krs_detail', 'krs_detail.kode_krs_detail', '=', 'kelas_mahasiswa.kode_krs_detail')
+            ->join('krs', 'krs.kode_krs', '=', 'krs_detail.kode_krs')
+            ->join('mahasiswa', 'mahasiswa.nim', '=', 'krs.nim')
+            ->join('tahun_akademik', 'tahun_akademik.kode_tahun_akademik', '=', 'kelas.kode_tahun_akademik');
+
+        if ($tha) {
+            $query->where('tahun_akademik.tahun_akademik', $tha);
+        }
+        if ($semester) {
+            if($semester == 2){
+                $semester = 0;
+            } 
+            $query->where('kelas.semester', $semester);
+        }
+        if ($kelas) {
+            $query->where('kelas.kelas_id', $kelas);
+        }
+
+        $data = $query->select(
+            'mahasiswa.nim as npm',
+            'nama_mahasiswa as nama',
+            'email',
+            'program_studi_kode as kode_prodi'
+        )->get();
+
+        return response()->json([
+            'status' => [
+                'code' => 200,
+                'description' => 'OK',
+                'pages_count' => 1,
+            ],
+            'results' => $data,
         ]);
     }
 }
